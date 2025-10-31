@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import FooterMenu from "./components/FooterMenu";
 import LotteryStats from "./components/LotteryStats";
 import NavigationBar from "./components/NavigationBar";
 
@@ -8,6 +9,7 @@ function Layout() {
       <NavigationBar />
       <LotteryStats />
       <Outlet />
+      <FooterMenu />
     </div>
   );
 }

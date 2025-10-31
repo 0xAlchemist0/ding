@@ -121,7 +121,7 @@ function DingDepositor() {
   ///these componeents will be put in speerate files to have clean and readable code just etting up flow
 
   return (
-    <div>
+    <div className="mb-20">
       <div className="border w-90 border-gray-600 rounded-lg m-auto mt-3 p-5 grid grid-flow-row gap-2">
         <AmountButtons tiers={["1", "10", "100", "1000"]} />
         <h1 className="text-xs ms-1 mt-4">You Pay</h1>

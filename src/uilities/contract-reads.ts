@@ -24,6 +24,23 @@ async function getDepositTier(amountUSD: any) {
   }
 }
 
+async function getUserTotalSpent(userAddress: any) {
+  try {
+    const userTotalSpent = await readContract(config, {
+      address: contracts.lottery,
+      abi: lotteryABI,
+      functionName: "userTotalSpent",
+      args: [userAddress],
+    });
+    //usdc 6 decimals
+    const formatted = uintToRegular(String(userTotalSpent), "6");
+    return String(formatted);
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
 async function getUSDCollected() {
   try {
     const totalUSD = await readContract(config, {
@@ -76,4 +93,4 @@ function formatTierResponse(tier: any) {
   }
 }
 
-export { getDepositTier, getTotalEntries, getUSDCollected };
+export { getDepositTier, getTotalEntries, getUSDCollected, getUserTotalSpent };
