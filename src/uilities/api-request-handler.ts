@@ -1,32 +1,38 @@
-import { decodeXPaymentResponse, wrapFetchWithPayment } from "x402-fetch";
-import { dingEndpoints } from "./ding-endpoints";
 const baseUrl = "https://www.dingdotfun.com";
 const lottoEndpoint = "https://www.dingdotfun.com/api/x402/lottery";
+import axios from "axios";
+import { decodeXPaymentResponse, withPaymentInterceptor } from "x402-axios";
+import { dingBaseURL } from "./ding-endpoints";
 
-async function excecutePaymentRequest(usdAmout: String, signer: any) {
+function getWrappedFetcher(baseURL: any, account: any) {
+  return withPaymentInterceptor(
+    axios.create({
+      baseURL,
+    }),
+    account
+  );
+}
+
+async function excecutePaymentRequest(amount: String, account: any = null) {
   try {
-    //custom fetch for x402 stuff
-    //x402-fetch extends the native fetch API to handle 402 responses and payment headers for you. Full example here
-    const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
+    if (!account) throw new Error("No account provided!");
+    const x402Fetcher = getWrappedFetcher(dingBaseURL, account);
+    //complette refator we will try to use axios fetch instead to wrap into custom excecutor
+    const endpoint = detectEndpoint(amount);
+    console.log(dingBaseURL + endpoint);
+    const paymentRequest = await x402Fetcher.post(
+      dingBaseURL + "/api/x402" + endpoint
+    );
+    const { data: paymentData } = await paymentRequest.data;
+    if (!paymentData) throw new Error("No request data recieved to proceed!");
 
-    const endpointKey: any | null = detectEndpoint(usdAmout);
-
-    if (endpointKey !== null) {
-      //no body params needed everything is doen automatically since endpoint has no body just pass in wallet client
-      console.log("Endpoint selected: ", dingEndpoints[endpointKey]);
-      const paymentRequest: any = await fetchWithPayment(
-        baseUrl + dingEndpoints[endpointKey] + import.meta.env.VITE_CB_API_KEY,
-        {
-          method: "POST",
-        }
-      );
-      const paymentBodyRes = await paymentRequest.json();
-      const reciept = decodeXPaymentResponse(
-        paymentBodyRes.headers.get("x-payment-response")
-      );
-      return reciept;
-    }
-  } catch (error) {
+    const paymentResponse = decodeXPaymentResponse(
+      paymentData.headers["x-payment-response"]!
+    );
+    console.log("Payment success!");
+    console.log(paymentResponse);
+    return {};
+  } catch (error: any) {
     console.log(error);
     return null;
   }
@@ -36,19 +42,19 @@ function detectEndpoint(amount: String) {
   let key: any | null;
   switch (amount) {
     case "1":
-      key = "tier1";
+      key = "/tier-1";
       break;
 
     case "10":
-      key = "tier10";
+      key = "/tier-10";
       break;
 
     case "100":
-      key = "tier100";
+      key = "/tier-100";
       break;
 
     case "1000":
-      key = "tier1000";
+      key = "/tier-1000";
       break;
 
     default:

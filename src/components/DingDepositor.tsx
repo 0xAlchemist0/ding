@@ -41,6 +41,12 @@ function DingDepositor() {
     }
   };
 
+  const getApiWallet = async () => {
+    if (wallets) return walletClient;
+
+    return null;
+  };
+
   const handleDepositEvent = async () => {
     if (wallets[0] && depositAmount !== null && depositAmount !== "0") {
       console.log("Running tx");
@@ -57,12 +63,15 @@ function DingDepositor() {
 
       if (!isApproved) excecuteApproval();
 
-      const txReciept: any = await excecutePaymentRequest(
-        depositAmount,
-        walletClient
-      );
-      //if it fails it will return null, must be approved as well beofre doing
-      if (txReciept !== null && isApproved) setReciept(txReciept);
+      if (!isApproved) throw new Error("Asset not approvd tx failed");
+
+      const apiWallet = await getApiWallet();
+
+      const reciept = await excecutePaymentRequest(depositAmount, apiWallet);
+
+      return apiWallet;
+
+      //wallet excecution goes here
     }
   };
 
