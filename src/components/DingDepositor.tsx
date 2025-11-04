@@ -1,3 +1,4 @@
+import { useWallets } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import { FaArrowTrendUp } from "react-icons/fa6";
 import { GoTrophy } from "react-icons/go";
@@ -5,9 +6,10 @@ import { IoIosArrowDown } from "react-icons/io";
 import { LuArrowDownUp } from "react-icons/lu";
 import { useAccount, useWalletClient } from "wagmi";
 import { excecutePaymentRequest } from "../uilities/api-request-handler";
-import { getDepositTier } from "../uilities/contract-reads";
+import { getDepositTier, verifyApproval } from "../uilities/contract-reads";
+import { approveSpending } from "../uilities/contract-writes";
+import contracts from "../uilities/contracts";
 import imageURLS from "../uilities/imageURLs";
-
 // { usdCost, dingMint, winChancePPM, winChancePercent }
 function DingDepositor() {
   const account = useAccount();
@@ -20,6 +22,7 @@ function DingDepositor() {
     winChancePercent: null,
   });
   const [reciept, setReciept] = useState(null);
+  const { wallets } = useWallets();
   useEffect(() => {
     //tier returns an array returns a tuple
     const getTierQuote = async () => {
@@ -39,14 +42,27 @@ function DingDepositor() {
   };
 
   const handleDepositEvent = async () => {
-    if (account?.address && depositAmount !== null && depositAmount !== "0") {
+    if (wallets[0] && depositAmount !== null && depositAmount !== "0") {
       console.log("Running tx");
+      const isApproved = await verifyApproval(
+        wallets[0]?.address,
+        contracts.lottery,
+        contracts.usdc,
+        depositAmount
+      );
+
+      const excecuteApproval = async () => {
+        await approveSpending(contracts.lottery, wallets[0]?.address);
+      };
+
+      if (!isApproved) excecuteApproval();
+
       const txReciept: any = await excecutePaymentRequest(
         depositAmount,
         walletClient
       );
-      //if it fails it will return null
-      txReciept !== null && setReciept(txReciept);
+      //if it fails it will return null, must be approved as well beofre doing
+      if (txReciept !== null && isApproved) setReciept(txReciept);
     }
   };
 
@@ -55,6 +71,8 @@ function DingDepositor() {
     //code will be refactored when done
     return <div></div>;
   }
+  //tx goes ere
+  function TxModal() {}
   function WinChanceCard() {
     //i will fix
     //we dont need no custome vieport styling since farcaster apps have a fixed size thank u god :)

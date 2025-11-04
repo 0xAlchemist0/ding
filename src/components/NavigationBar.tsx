@@ -1,20 +1,34 @@
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useEffect, useState } from "react";
 import { FaTelegramPlane } from "react-icons/fa";
 import { GoDotFill } from "react-icons/go";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
 import logoImages from "../uilities/logo-images";
 function NavigationBar() {
-  const account = useAccount();
-  let walletButtonValue = account?.address ? sliceAddress() : "Connect Wallet";
+  const account: any = useAccount();
+  const { ready, authenticated, login, logout }: any = usePrivy();
+  const { wallets }: any = useWallets();
+  const [walletBtnValue, setWalletBtnValue] = useState("");
+
+  useEffect(() => {
+    if (ready && authenticated && wallets) sliceAddress();
+    else {
+      setWalletBtnValue("Connect Wallet");
+    }
+  }, [ready, authenticated, wallets]);
 
   function sliceAddress() {
-    if (account?.address) {
-      return (
-        account?.address?.slice(0, 4) +
-        "..." +
-        account?.address.slice(
-          account?.address?.length - 4,
-          account?.address.length
+    console.log(wallets);
+    if (wallets) {
+      setWalletBtnValue(
+        String(
+          wallets[0]?.address?.slice(0, 4) +
+            "..." +
+            wallets[0]?.address.slice(
+              wallets[0]?.address?.length - 4,
+              wallets[0]?.address.length
+            )
         )
       );
     }
@@ -42,14 +56,17 @@ function NavigationBar() {
         >
           <FaTelegramPlane className="mt-1.5 text-gray-400 text-sm" />
         </Link>
-        <div className="border h-7 mt-3.5 px-3 rounded-md border-gray-600 flex gap-1">
+        <button
+          className="border h-7 mt-3.5 px-3 rounded-md border-gray-600 flex gap-1 hover:cursor-pointer"
+          onClick={ready && authenticated ? logout : login}
+        >
           <img
             src={logoImages.farcasterlogo}
             alt=""
             className="size-3.5 mt-1.5 rounded-md me-1"
           />
-          <h1 className="text-xs mt-1.5">{walletButtonValue}</h1>
-        </div>
+          <h1 className="text-xs mt-1.5">{walletBtnValue}</h1>
+        </button>
       </div>
     </div>
   );

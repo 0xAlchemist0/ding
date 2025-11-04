@@ -1,8 +1,32 @@
 import { readContract } from "@wagmi/core";
+import ERC20ABI from "../abi/ERC20ABI";
 import lotteryABI from "../abi/lotteryABI";
 import { config } from "../wagmi";
 import contracts from "./contracts";
 import { regulareToUint, uintToRegular } from "./solidity-conversions";
+
+async function verifyApproval(
+  owner: any,
+  spender: any,
+  asset: any,
+  amount: any
+) {
+  try {
+    const allowance: any = await readContract(config, {
+      address: asset,
+      abi: ERC20ABI,
+      functionName: "allowance",
+      args: [owner, spender],
+    });
+    console.log("Allowance: ", allowance);
+    //returns true if we can spend false if we cant
+    return Number(allowance) >= Number(amount) ? true : false;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
 async function getDepositTier(amountUSD: any) {
   try {
     //converts to uint256
@@ -93,4 +117,28 @@ function formatTierResponse(tier: any) {
   }
 }
 
-export { getDepositTier, getTotalEntries, getUSDCollected, getUserTotalSpent };
+export {
+  getDepositTier,
+  getTotalEntries,
+  getUSDCollected,
+  getUserTotalSpent,
+  verifyApproval,
+};
+
+//this model represents the tables in the databse
+
+// model User {
+//   id    Int     @id @default(autoincrement())
+//   email String  @unique
+//   name  String?
+//   posts Post[]
+// }
+
+// model Post {
+//   id        Int     @id @default(autoincrement())
+//   title     String
+//   content   String?
+//   published Boolean @default(false)
+//   author    User    @relation(fields: [authorId], references: [id])
+//   authorId  Int
+// }

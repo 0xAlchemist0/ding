@@ -1,25 +1,29 @@
 import { decodeXPaymentResponse, wrapFetchWithPayment } from "x402-fetch";
 import { dingEndpoints } from "./ding-endpoints";
+const baseUrl = "https://www.dingdotfun.com";
 const lottoEndpoint = "https://www.dingdotfun.com/api/x402/lottery";
 
-async function excecutePaymentRequest(usdAmout: String, walletClient: any) {
+async function excecutePaymentRequest(usdAmout: String, signer: any) {
   try {
     //custom fetch for x402 stuff
     //x402-fetch extends the native fetch API to handle 402 responses and payment headers for you. Full example here
-    const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient);
+    const fetchWithPayment = wrapFetchWithPayment(fetch, signer);
 
     const endpointKey: any | null = detectEndpoint(usdAmout);
 
     if (endpointKey !== null) {
       //no body params needed everything is doen automatically since endpoint has no body just pass in wallet client
+      console.log("Endpoint selected: ", dingEndpoints[endpointKey]);
       const paymentRequest: any = await fetchWithPayment(
-        dingEndpoints[endpointKey],
+        baseUrl + dingEndpoints[endpointKey] + import.meta.env.VITE_CB_API_KEY,
         {
           method: "POST",
         }
       );
       const paymentBodyRes = await paymentRequest.json();
-      const reciept = decodeXPaymentResponse(paymentBodyRes);
+      const reciept = decodeXPaymentResponse(
+        paymentBodyRes.headers.get("x-payment-response")
+      );
       return reciept;
     }
   } catch (error) {
@@ -27,7 +31,7 @@ async function excecutePaymentRequest(usdAmout: String, walletClient: any) {
     return null;
   }
 }
-
+// node_modules/@solana-program/compute-budget/dist/src/index.mjs:1:217
 function detectEndpoint(amount: String) {
   let key: any | null;
   switch (amount) {
@@ -51,7 +55,7 @@ function detectEndpoint(amount: String) {
       key = null;
       break;
   }
-
+  console.log("key determined: ", key);
   return key;
 }
 
