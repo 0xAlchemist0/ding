@@ -82,6 +82,34 @@ async function getUSDCollected() {
   }
 }
 
+async function getuserDingReceived(address: any) {
+  try {
+    const userEntries = await readContract(config, {
+      address: contracts.lottery,
+      abi: lotteryABI,
+      functionName: "userDingReceived",
+      args: [address],
+    });
+
+    return userEntries;
+  } catch (error) {
+    console.log(error);
+  }
+}
+async function getUserEntries(address: any) {
+  try {
+    const userEntries = await readContract(config, {
+      address: contracts.lottery,
+      abi: lotteryABI,
+      functionName: "userEntries",
+      args: [address],
+    });
+    return userEntries;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 async function getTotalEntries() {
   try {
     const totalEntries = await readContract(config, {
@@ -89,6 +117,8 @@ async function getTotalEntries() {
       abi: lotteryABI,
       functionName: "totalEntries",
     });
+
+    return totalEntries;
 
     //no need for formatting this value already fine
 
@@ -121,6 +151,8 @@ export {
   getDepositTier,
   getTotalEntries,
   getUSDCollected,
+  getuserDingReceived,
+  getUserEntries,
   getUserTotalSpent,
   verifyApproval,
 };
@@ -141,4 +173,4 @@ export {
 //   published Boolean @default(false)
 //   author    User    @relation(fields: [authorId], references: [id])
 //   authorId  Int
-// }
+//

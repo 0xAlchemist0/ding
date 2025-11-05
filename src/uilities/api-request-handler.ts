@@ -14,6 +14,7 @@ function getWrappedFetcher(baseURL: any, account: any) {
 }
 
 async function excecutePaymentRequest(amount: String, account: any = null) {
+  let res = null;
   try {
     if (!account) throw new Error("No account provided!");
     const x402Fetcher = getWrappedFetcher(dingBaseURL, account);
@@ -25,18 +26,27 @@ async function excecutePaymentRequest(amount: String, account: any = null) {
     );
     const { data: paymentData } = await paymentRequest.data;
     if (!paymentData) throw new Error("No request data recieved to proceed!");
-
     const paymentResponse = decodeXPaymentResponse(
       paymentData.headers["x-payment-response"]!
     );
     console.log("Payment success!");
     console.log(paymentResponse);
-    return {};
+    console.log("Payment success!");
+
+    res = txResult(true);
   } catch (error: any) {
     console.log(error);
-    return null;
+    res = txResult(false);
   }
+
+  return res;
 }
+
+function txResult(isComplete: boolean) {
+  if (isComplete) return { message: "Successfully Deposited!", failed: false };
+  return { message: " Transaction could not be completed!", failed: true };
+}
+
 // node_modules/@solana-program/compute-budget/dist/src/index.mjs:1:217
 function detectEndpoint(amount: String) {
   let key: any | null;

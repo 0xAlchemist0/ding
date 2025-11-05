@@ -1,8 +1,9 @@
+import { Button, ButtonGroup, Snackbar } from "@mui/material";
 import { useWallets } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
+import { FaCheckCircle, FaWallet } from "react-icons/fa";
 import { FaArrowTrendUp } from "react-icons/fa6";
 import { GoTrophy } from "react-icons/go";
-import { IoIosArrowDown } from "react-icons/io";
 import { LuArrowDownUp } from "react-icons/lu";
 import { useAccount, useWalletClient } from "wagmi";
 import { excecutePaymentRequest } from "../uilities/api-request-handler";
@@ -14,6 +15,11 @@ import imageURLS from "../uilities/imageURLs";
 function DingDepositor() {
   const account = useAccount();
   const { data: walletClient } = useWalletClient();
+  const [opensnack, setOpenSnack] = useState(false);
+  const [snackMessage, setSnackMessage] = useState({
+    message: null,
+    failed: null,
+  });
   const [depositAmount, setDepositAmount] = useState(null);
   const [tierQuote, setTierQuote] = useState({
     usdCost: null,
@@ -21,7 +27,7 @@ function DingDepositor() {
     winChancePPM: null,
     winChancePercent: null,
   });
-  const [reciept, setReciept] = useState(null);
+  const [txReciept, setTxReciept] = useState(null);
   const { wallets } = useWallets();
   useEffect(() => {
     //tier returns an array returns a tuple
@@ -67,7 +73,12 @@ function DingDepositor() {
 
       const apiWallet = await getApiWallet();
 
-      const reciept = await excecutePaymentRequest(depositAmount, apiWallet);
+      const message: any = await excecutePaymentRequest(
+        depositAmount,
+        apiWallet
+      );
+
+      if (message) setSnackMessage(message);
 
       return apiWallet;
 
@@ -127,10 +138,10 @@ function DingDepositor() {
   //we will fix the types
   function AmountButtons({ tiers }: any) {
     return (
-      <div className="flex gap-3">
+      <ButtonGroup sx={{ color: "#008000" }} aria-label="Basic button group">
         {tiers.map((item: any, index: any) => {
           return (
-            <button
+            <Button
               key={index}
               onClick={() => {
                 setDepositAmount(item);
@@ -138,82 +149,95 @@ function DingDepositor() {
               className="border px-3 text-xs border-gray-700 rounded-md p-1 text-gray-300 font-semibold"
             >
               ${item}
-            </button>
+            </Button>
           );
         })}
-      </div>
+      </ButtonGroup>
     );
   }
 
   ///these componeents will be put in speerate files to have clean and readable code just etting up flow
 
   return (
-    <div className="mb-20">
-      <div className="border w-90 border-gray-600 rounded-lg m-auto mt-3 p-5 grid grid-flow-row gap-2">
+    <div className="mb-40 mt-20">
+      <div className="border w-100 border-gray-600 bg-gray-900 [#1b2431]rounded-lg m-auto mt-3 p-5 grid grid-flow-row gap-2 rounded-md">
+        <h1 className="text-xl font-bold mb-3 text-gray-500">Enter Lottery</h1>
         <AmountButtons tiers={["1", "10", "100", "1000"]} />
+
         <h1 className="text-xs ms-1 mt-4">You Pay</h1>
 
-        <div className="border border-gray-600 rounded-md p-5 grid grid-cols-7">
-          <input
-            type="text"
-            className="col-span-4 p-2 outline-0"
-            placeholder="0"
-            value={depositAmount || ""}
-            onChange={handleChange}
-          />
-          <div className="flex gap-3 border text-gray-300 font-bold col-span-3 justify-center rounded-lg border-gray-600 ">
-            <button className="flex gap-2 hover:cursor-pointer">
-              <img
-                src={imageURLS.usdc}
-                alt=""
-                className="size-5 mt-2 rounded-full"
-              />
+        <div className="grid grid-flow-row border p-5 border-gray-600 bg-gray-800 rounded-md">
+          <div className=" rounded-md  grid grid-cols-7">
+            <input
+              type="text"
+              className="col-span-4 p-0 outline-0 text-3xl font-bold font-sans"
+              placeholder="0"
+              value={depositAmount || ""}
+              onChange={handleChange}
+            />
+            <div className="flex gap-3  border-0 w-full bg-gray-800 text-gray-300 font-bold col-span-3 justify-center rounded-lg  ">
+              <button className="flex gap-2 border rounded-md ms-auto border-gray-600 h-8 px-5  justify-right  text-[14px] hover:cursor-pointer bg-gray-700">
+                <img
+                  src={imageURLS.usdc}
+                  alt=""
+                  className="size-4.5 mt-1 rounded-full"
+                />
 
-              <h1 className="mt-2">USDC</h1>
-            </button>
-            <IoIosArrowDown className="mt-3" />
+                <h1 className="mt-1">USDC</h1>
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-between mt-2 text-xs font-bold text-gray-500 ">
+            <h1 className="mt-1.5">$0.00</h1>
+            <span className="flex gap-2  ">
+              <FaWallet className="mt-1.5" />
+              <h1 className=" mt-1">0.00</h1>
+            </span>
           </div>
         </div>
+
         {/* bot are same elow and above compose into a component  */}
         <LuArrowDownUp className="m-auto text-2xl text-gray-600" />
 
         {/*separator i middle icon  */}
         <h1 className="text-xs ms-1">You Recieve</h1>
 
-        <div className="border border-gray-600 rounded-md p-5 grid grid-cols-7">
-          <input
-            type="text"
-            className="col-span-4 p-2 outline-0"
-            // fix holder for now to see if quote works
-            placeholder={tierQuote ? "2000" : "0"}
-            // fix make template obect to handle tehese errors
-            value={tierQuote && tierQuote?.dingMint ? tierQuote?.dingMint : "0"}
-            disabled={true}
-          />
-          <div className="flex gap-3 border text-gray-300 font-bold col-span-3 justify-center  rounded-lg border-gray-600 ">
-            <button className="flex gap-2 hover:cursor-pointer">
-              <img
-                src={imageURLS.ding}
-                alt=""
-                className="size-5 mt-2 rounded-full"
-                onClick={handleDepositEvent}
-              />
+        <div className="grid grid-flow-row border p-5 border-gray-600 bg-gray-800 rounded-md">
+          <div className=" rounded-md  grid grid-cols-7">
+            <input
+              type="text"
+              className="col-span-4 p-0 outline-0 text-3xl"
+              placeholder={tierQuote ? "2000" : "0"}
+              // fix make template obect to handle tehese errors
+              value={
+                tierQuote && tierQuote?.dingMint ? tierQuote?.dingMint : "0"
+              }
+              disabled={true}
+            />
+            <div className="flex gap-3  border-0 w-full bg-gray-800 text-gray-300 font-bold col-span-3 justify-center rounded-lg ">
+              <button className=" flex justify-end  gap-2 border rounded-md ms-auto border-gray-600 h-8 px-5  justify-right  text-[14px] hover:cursor-pointer bg-gray-700">
+                <img
+                  src={imageURLS.ding}
+                  alt=""
+                  className="size-4.5 mt-1 rounded-full"
+                />
 
-              <h1 className="mt-2">DING</h1>
-            </button>
-            <IoIosArrowDown className="mt-3" />
+                <h1 className="mt-1">Ding</h1>
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-between mt-2 text-xs font-bold text-gray-500 ">
+            <h1 className="mt-1.5">$0.00</h1>
+            <span className="flex gap-2  ">
+              <FaWallet className="mt-1.5" />
+              <h1 className=" mt-1">0.00</h1>
+            </span>
           </div>
         </div>
-        {/* cards cgo here stat card */}
-        <div className="grid grid-flow-row gap-3 mt-2 mb-2">
-          <WinChanceCard />
-          <JackpotCard />
-        </div>
 
-        {/* connect wallet or deposit button */}
-        <div>
+        <div className="mt-4">
           <button
-            className="border w-full p-3 rounded-md border-gray-600 text-xs bg-slate-800 font-bold hover:bg-slate-800/70 hover:cursor-pointer"
+            className="border w-full p-3 rounded-md border-gray-600 text-sm  bg-slate-800 font-extrabold hover:text-gray-200/50 hover:bg-slate-800/70 hover:cursor-pointer"
             onClick={() => {
               handleDepositEvent();
             }}
@@ -222,6 +246,29 @@ function DingDepositor() {
           </button>
         </div>
       </div>
+      {/* cards cgo here stat card */}
+      <div className="grid grid-flow-row gap-3 mt-10 mb-2 w-90 m-auto">
+        <WinChanceCard />
+        <JackpotCard />
+      </div>
+      <Snackbar
+        open={snackMessage.message !== null}
+        autoHideDuration={6000}
+        onClose={() => {
+          setOpenSnack(false);
+        }}
+        message={
+          <span className="flex gap-2">
+            <FaCheckCircle
+              className={`text-${snackMessage.failed ? "red-500" : "green-500"} mt-1`}
+            />
+            {snackMessage.message}
+          </span>
+        }
+        color="white"
+      />
+
+      {/* connect wallet or deposit button */}
     </div>
   );
 }

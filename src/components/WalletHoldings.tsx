@@ -2,7 +2,8 @@ import { Badge } from "@mui/material";
 import { useEffect, useState } from "react";
 import { FaBolt } from "react-icons/fa6";
 import { useAccount } from "wagmi";
-import { getUserTotalSpent } from "../uilities/contract-reads";
+import { getUserEntries } from "../uilities/contract-reads";
+import imageURLS from "../uilities/imageURLs";
 import logoImages from "../uilities/logo-images";
 
 function WalletHoldings() {
@@ -11,7 +12,7 @@ function WalletHoldings() {
 
   useEffect(() => {
     const getTotalDeposited = async () => {
-      const result = await getUserTotalSpent(account?.address);
+      const result = await getUserEntries(account?.address);
       if (result !== null && result) setTotalDeposited(result);
     };
 
@@ -79,17 +80,19 @@ function WalletHoldings() {
           >
             {" "}
             <img
-              src={logoImages.dinglogo}
+              src={imageURLS.ding}
               alt=""
               className="size-10 border-gray-800 bg-gray-800 border rounded-full h-10"
             />
           </Badge>
           <div className="grid grid-rows-1 text-sm font-bold mt-0.5">
-            <h1>Ding Entries</h1>
+            <span className="flex">
+              <h1>$Ding</h1>
+            </span>
             <h1 className="text-gray-600">Ding</h1>
           </div>
         </span>
-        <h1 className="mt-2">20</h1>
+        <h1 className="mt-2 font-bold text-2xl">20</h1>
       </div>
     </div>
   );
